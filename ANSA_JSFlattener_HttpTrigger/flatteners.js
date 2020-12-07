@@ -1,84 +1,88 @@
-function a() {
-  var body = workflowContext.actions.Parse_CommonJSON.outputs.body;
-  var risk_chklist = "";
+function e0e1(dict, e0Key) {
+  if (!dict) return [];
+
+  return Object.entries(dict)
+    .map(e => {
+      return { [e0Key]: e[0], ...e[1] };
+    })
+    .filter(e => e);
+}
+// objectOfObjectTypeKeys: (5) ["PDC", "OtherAddictiveBehaviours", "Past4WkEngagedInOtheractivities", "HowDoYouSpendTime", "RiskAssessmentCheck"]
+function riskAssessmentTimeSpent(body) {
+  // RiskAssessmentCheck:
+  //   IndicationOfDomesticFamViolence:
+  //     NoYes: true
+  //   IndicationOfMHRisks:
+  //     NoYes: false
+  let risk_chklist = "";
   if (body["RiskAssessmentCheck"])
     risk_chklist = Object.entries(body["RiskAssessmentCheck"])
-      .map((e) => {
+      .map(e => {
         if (e[1]["NoYes"]) return e[0];
       })
-      .filter((f) => f)
+      .filter(f => f)
       .join(", ");
-  var timeSpent = [];
+
+  let timeSpent = [];
   if (body["HowDoYouSpendTime"])
-    timeSpent = Object.entries(body["HowDoYouSpendTime"]).map((e) => {
-      let a = {};
-      a["area"] = e[0];
-      a["rank"] = e[1]["Rank Importance to You (in terms of time spent)"];
-      return a;
-    });
-  var sortedTimeSpent = timeSpent.sort((a, b) =>
-    a.rank > b.rank ? 1 : b.rank > a.rank ? -1 : 0
+    timeSpent = e0e1(body["HowDoYouSpendTime"], "area");
+
+  const sortedTimeSpent = timeSpent.sort((a, b) =>
+    a.Rank > b.Rank ? 1 : b.Rank > a.Rank ? -1 : 0
   );
+
   return {
     RiskAssessmentCheck: risk_chklist,
-    SortedTimeSpent: sortedTimeSpent
-      .map((e) => `${e["area"]}(${e["rank"]})`)
+    HowDoYouSpendTime: sortedTimeSpent
+      .map(e => `${e["area"]}(${e["Rank"]})`)
       .join(",  ")
   };
 }
 
-function b() {
-  var body = workflowContext.actions.Parse_CommonJSON.outputs.body;
-  function chkList(list) {
-    if (!list) return "";
-    return list.join(", ");
-  }
-  var oab = [];
-  if (body["OtherAddictiveBehaviours"])
-    Object.entries(body["OtherAddictiveBehaviours"]).forEach((k) =>
-      oab.push({ oBehave: k[0], Days: k[1]["Days"] })
+function joinStrings(body, listOfStringListNames = [], exclusions = []) {
+  let dict = {};
+  if (exclusions)
+    listOfStringListNames = listOfStringListNames.filter(
+      e => !exclusions.includes(e)
     );
+
+  listOfStringListNames.forEach(eStrListName => {
+    if (!body[eStrListName]) return "";
+    dict[eStrListName] = body[eStrListName].join(", ");
+  });
+  return dict;
+}
+
+// OtherAddictiveBehaviours e0e1(body,"OtherAddictiveBehaviours",  "OBehave")
+function spreadUpIntoArray(body) {
   return {
-    OtherAddictiveBehaviours: oab,
-    SupportTypeBestMatchesNeedsGoals: chkList(
-      body["SupportTypeBestMatchesNeedsGoals"]
-    ),
-    PrimaryCaregiver: chkList(body["PrimaryCaregiver"]),
-    MHRecentRiskIssues: chkList(body["MHRecentRiskIssues"]),
-    MHHistoricalRiskIssues: chkList(body["MHHistoricalRiskIssues"])
+    OtherAddictiveBehaviours: e0e1(body["OtherAddictiveBehaviours"], "OBehave"),
+    //  0: {EngType: "Paid Work",  Frequency: 5, Days: "4"}
+    Past4WkEngagedInOtheractivities: e0e1(
+      body["Past4WkEngagedInOtheractivities"],
+      "EngType"
+    )
   };
 }
+/* INPUT :
+    Past4WkEngagedInOtheractivities:
+      Looking after children:
+        Days: "15"
 
-function c() {
-  var body = workflowContext.actions.Parse_CommonJSON.outputs.body;
-  function chkList2(listName) {
-    if (!body[listName]) return "";
-    return body[listName].join(", ");
-  }
-  var pdc = body["PDC"][0];
+      Other caregiving activities:
+        Frequency: 2
 
-  return {
-    SupportFromWhichOtherServices2: chkList2("SupportFromWhichOtherServices"),
-    PDCSubstanceOrGambling: pdc["PDCSubstanceOrGambling"],
-    PDCAgeFirstUsed: pdc["PDCAgeFirstUsed"],
-    PDCAgeLastUsed: pdc["PDCAgeLastUsed"],
-    PDCDaysInLast28: pdc["PDCDaysInLast28"],
-    PDCUnits: pdc["PDCUnits"],
-    PDCGoals: pdc["PDCGoals"],
-    PDCHowMuchPerOccasion: pdc["PDCHowMuchPerOccasion"],
-    HealthChecklist_STAFF: chkList2(body["HealthChecklist_STAFF"])
-  };
-}
+      Paid Work:
+        Days: "4"
+        Frequency: 5
+    
+    // FUNCTION:  e0e1(body,"Past4WkEngagedInOtheractivities",  "EngType")
+    // RESULT  :
+    [
+      0: {EngType: "Paid Work",  Frequency: 5, Days: "4"}
+      1: {EngType: "Study - college, school or vocational education", Frequency: 3, Days: "13"}
+      2: {EngType: "Voluntary Work", Frequency: 2, Days: "7"}
+    ] 
 
-function d() {
-  var body = workflowContext.actions.Parse_CommonJSON.outputs.body;
-  var otheractivities = "";
-  if (body["Past4WkEngagedInOtheractivities"])
-    otheractivities = Object.entries(body["Past4WkEngagedInOtheractivities"])
-      .map((e) => {
-        return { EngType: e[0], Freq: e[1]["Frequency"], Days: e[1]["Days"] };
-      })
-      .filter((e) => e);
-
-  return otheractivities;
-}
+    */
+module.exports = { spreadUpIntoArray, joinStrings, riskAssessmentTimeSpent };

@@ -2,45 +2,44 @@ const { buildTypesLists } = require("./utils");
 const {
   spreadUpIntoArray,
   joinStrings,
-  riskAssessmentTimeSpent
+  areaRank
 } = require("./flatteners");
 
-function transform(surveyData, typesLists, exclusions) {
-  const { listOfStringLists, objectOfObjectTypeKeys } = typesLists;
-  // 0: "PDC"
-  // 1: "OtherAddictiveBehaviours"
-  // 2: "Past4WkEngagedInOtheractivities"
-  // 3: "HowDoYouSpendTime"
+function transform(surveyData, typesLists, spreadUpAliasMap, exclusions) {
+
+  const { listOfStringLists, rankedObjectOfObjectTypeKeys } = typesLists;
+  // listOfStringLists: HealthChecklist_STAFF, MHRecentRiskIssues, MHHistoricalRiskIssues
+  // rankedObjectOfObjectTypeKeys : 3: "HowDoYouSpendTime"
   // 4: "RiskAssessmentCheck"
-
   const joinedLists = joinStrings(surveyData, listOfStringLists, exclusions);
-
   let sData = {
     ...surveyData,
     ...surveyData["PDC"][0],
-    ...spreadUpIntoArray(surveyData),
-    ...joinedLists,
-    ...riskAssessmentTimeSpent(surveyData)
+    //   // 1: "OtherAddictiveBehaviours"   2: "Past4WkEngagedInOtheractivities"
+    ...spreadUpIntoArray(surveyData, spreadUpAliasMap),
+    ...joinedLists, // HealthChecklist_STAFF, MHRecentRiskIssues
+    ...areaRank(surveyData, rankedObjectOfObjectTypeKeys) //"HowDoYouSpendTime")
   };
 
-  delete sData["PDC"];
+  ["PDC", ...Object.keys(spreadUpAliasMap) ].forEach( e => delete sData[e]);
 
   return sData;
 }
 
+/* *
+ * function app : ansa-jsflattener
+ */
 module.exports = async function (context, req) {
-  // function app : ansa-jsflattener
   context.log(
     "JavaScript HTTP " +
       req.body.SurveyData +
       "trigger function processed a request."
   );
 
-  const exclusions = req.body.Exclusions; //["FinalChecklist"]
   const surveyData = JSON.parse(req.body.SurveyData);
   const typesLists = buildTypesLists(surveyData);
 
-  const transformedSurveyData = transform(surveyData, typesLists, exclusions);
+  const transformedSurveyData = transform(surveyData, typesLists, req.body.SpreadUpAliasMap, req.body.Exclusions);
 
   // const {
   //   objectArrayTypeKeys,
@@ -49,17 +48,7 @@ module.exports = async function (context, req) {
   // } = buildTable(transformedSurveyData);
 
   const responseMessage = transformedSurveyData;
-  //JSON.stringify(
-  // {
-  //   arrays: objectArrayTypeKeys,
-  //   objs: objectOfObjectTypeKeys,
-  //   strings: objectOfStringsTypeKeys
-  // };
-  //)
 
-  // name
-  //     ? "Hello, " + name + ". This HTTP triggered function executed successfully."
-  //     : "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.";
 
   context.res = {
     // status: 200, /* Defaults to 200 */

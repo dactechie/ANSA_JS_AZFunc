@@ -1,3 +1,8 @@
+
+function stripChars(string, chars) {
+  return string.replace(RegExp('['+chars+']','g'), '');
+}
+
 function buildTypesLists(surveyData) {
   const listOfStringLists = Object.keys(surveyData).filter(k => {
     const v = surveyData[k];
@@ -26,20 +31,24 @@ function buildTypesLists(surveyData) {
     }
     return false;
   });
-  // const objectOfStringsTypeKeys = Object.keys(surveyData).filter(k => {
-  //   let v = surveyData[k]; // mhealthnotes : {...}
-  //   if (typeof v === "object") {
-  //     const values = Object.values(v); // ["mental_issues" , "goals"]
-  //     return typeof v[0] === "undefined" && typeof values[0] === "string";
-  //   }
-  //   return false;
-  // });
-  //console.log("objectOfStringsTypeKeys", this.objectOfStringsTypeKeys);
+
+  //'How do you spend 
+  // Drugs and/or Drinking (sourcing & using)
+  const rankedObjectOfObjectTypeKeys = objectOfObjectTypeKeys.filter(k => {
+    let v = surveyData[k];
+    const keys = Object.keys(v); 
+    const inKeys = Object.keys(v[keys[0]]);
+    return (inKeys.length > 0)  &&  inKeys.includes("Rank");    
+  });
+  // objectOfObjectTypeKeys = objectOfObjectTypeKeys.filter( k => {
+  //   return !rankedObjectOfObjectTypeKeys.includes(k)
+  // })
 
   return {
     listOfStringLists,
 
-    objectOfObjectTypeKeys
+   // objectOfObjectTypeKeys,
+    rankedObjectOfObjectTypeKeys
     // 0: "PDC"
     // 1: "OtherAddictiveBehaviours"
     // 2: "Past4WkEngagedInOtheractivities"
@@ -50,4 +59,4 @@ function buildTypesLists(surveyData) {
     // objectOfStringsTypeKeys // []
   };
 }
-module.exports = { buildTypesLists };
+module.exports = { buildTypesLists, stripChars };

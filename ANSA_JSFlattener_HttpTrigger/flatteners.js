@@ -1,29 +1,26 @@
 
 
 const { stripChars } = require("./utils");
-/**  Function : e0e1
-  INPUT :
-    Past4WkEngagedInOtheractivities:
-      Looking after children:
-        Days: "15"
+/**  Function : e0e1Old(dict, e0Key)
+ *   Sample call : e0e1Old(body,"HowDoYouSpendTime",  "area")
+    ** INPUT **
+      HowDoYouSpendTime:
+        Looking after children:
+          Rank: "15"
 
-      Other caregiving activities:
-        Frequency: 2
+        Other caregiving activities:
+          Rank: 2
 
-      Paid Work:
-        Days: "4"
-        Frequency: 5
-    
-    // FUNCTION:  e0e1(body,"Past4WkEngagedInOtheractivities",  "EngType")
-    // RESULT  :
-    [
-      0: {EngType: "Paid Work",  Frequency: 5, Days: "4"}
-      1: {EngType: "Study - college, school or vocational education", Frequency: 3, Days: "13"}
-      2: {EngType: "Voluntary Work", Frequency: 2, Days: "7"}
-    ] 
-
+        Paid Work:
+          Rank: "4"
+          
+    ** OUTPUT **
+      [
+        0: {area: "Paid Work",  Rank: 5 }
+        1: {area: "Study - college, school or vocational education", Rank: 3}
+        2: {area: "Voluntary Work", Rank: "7"}
+      ] 
     */
-                  //OBehave / EngType
 function e0e1Old(dict, e0Key) {
   if (!dict) return [];
 

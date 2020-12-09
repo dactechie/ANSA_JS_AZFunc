@@ -59,4 +59,51 @@ function buildTypesLists(surveyData) {
     // objectOfStringsTypeKeys // []
   };
 }
-module.exports = { buildTypesLists, stripChars };
+
+// function addCheckMark(surveyData, fullCheckLists, checkPrefix, uncheckedPrefix) {
+//   // "FullCheckLists": {
+//   //   "FinalChecklist": 
+//   //         ["Risk Assessments Completed (if indicated)", ...],
+//   //   "RiskAssessmentCheckist": [
+//   //         "Any indication of mental health risks?","Any indication of suicidal ideation?",..
+//   // }
+//   let moddedChecklists = {};  
+
+//   for (const [listName, fullList] of Object.entries(fullCheckLists)) {
+//     const checkedValues = surveyData[listName];
+
+//     moddedChecklists[listName] = fullList.map(v => {
+//       if(checkedValues.includes(v))
+//         return `${checkPrefix}${v}`;
+//       return `${uncheckedPrefix}${v}`;
+//     });  
+//   }
+
+//   return moddedChecklists;
+// }
+
+function addCheckMark(surveyData, fullCheckLists) {
+  // "FullCheckLists": {
+  //   "FinalChecklist": 
+  //         ["Risk Assessments Completed (if indicated)", ...],
+  //   "RiskAssessmentCheckist": [
+  //         "Any indication of mental health risks?","Any indication of suicidal ideation?",..
+  // }
+  let moddedChecklists = {};  
+
+  for (const [listName, fullList] of Object.entries(fullCheckLists)) {
+    const checkedValues = surveyData[listName];
+    
+    moddedChecklists[listName] = {};
+    fullList.forEach(v => {
+      if(checkedValues.includes(v))
+        moddedChecklists[listName][v] = "y";
+      else
+        moddedChecklists[listName][v] = " ";
+      
+    });  
+  }
+
+  return moddedChecklists;
+}
+module.exports = { buildTypesLists, stripChars, addCheckMark };

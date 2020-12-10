@@ -1,12 +1,12 @@
 const { buildTypesLists, addCheckMark } = require("./utils");
-const {
-  spreadUpIntoArray,
-  joinStrings,
-  areaRank
-} = require("./flatteners");
+const { spreadUpIntoArray, joinStrings, areaRank } = require("./flatteners");
 
-function transformStructure(surveyData, typesLists, spreadUpAliasMap, exclusions) {
-
+function transformStructure(
+  surveyData,
+  typesLists,
+  spreadUpAliasMap,
+  exclusions
+) {
   const { listOfStringLists, rankedObjectOfObjectTypeKeys } = typesLists;
   // listOfStringLists: HealthChecklist_STAFF, MHRecentRiskIssues, MHHistoricalRiskIssues
   // rankedObjectOfObjectTypeKeys : 3: "HowDoYouSpendTime"
@@ -21,51 +21,48 @@ function transformStructure(surveyData, typesLists, spreadUpAliasMap, exclusions
     ...areaRank(surveyData, rankedObjectOfObjectTypeKeys) //"HowDoYouSpendTime")
   };
 
-  ["PDC", ...Object.keys(spreadUpAliasMap) ].forEach( e => delete sData[e]);
+  ["PDC", ...Object.keys(spreadUpAliasMap)].forEach(e => delete sData[e]);
 
   return sData;
 }
 
-function transformFormatting(surveyData, fullCheckLists) {
+function transformFormatting(surveyData, checklistNames) {
   // "FullCheckLists": {
-  //   "FinalChecklist": 
+  //   "FinalChecklist":
   //         ["Risk Assessments Completed (if indicated)", ...],
   //   "RiskAssessmentCheckist": [
   //         "Any indication of mental health risks?","Any indication of suicidal ideation?",..
   // }
-  if( !fullCheckLists) return surveyData;
+  if (!checklistNames) return surveyData;
 
-  const moddedChecklists = addCheckMark(
-                            surveyData
-                            , fullCheckLists);
- 
-  return {...surveyData,...moddedChecklists};
+  const moddedChecklists = addCheckMark(surveyData, checklistNames);
+
+  return { ...surveyData, ...moddedChecklists };
 }
 
 /* *
  * function app : ansa-jsflattener
  */
 module.exports = async function (context, req) {
-
-
-  
   const surveyData = JSON.parse(req.body.SurveyData);
   const typesLists = buildTypesLists(surveyData);
 
   const moddedStructSurveyData = transformStructure(
-                                    surveyData
-                                    , typesLists
-                                    , req.body.SpreadUpAliasMap
-                                    , req.body.Exclusions);
-  
+    surveyData,
+    typesLists,
+    req.body.SpreadUpAliasMap,
+    req.body.Exclusions
+  );
+
   const finalSurveyData = transformFormatting(
-                              moddedStructSurveyData
-                              , req.body.FullChecklists);
-      context.log(
-        "JavaScript HTTP output :  " +
-        JSON.stringify(finalSurveyData )+
-          "trigger function processed a request."
-      );
+    moddedStructSurveyData,
+    req.body.ChecklistNames
+  );
+  context.log(
+    "JavaScript HTTP output :  " +
+      JSON.stringify(finalSurveyData) +
+      "trigger function processed a request."
+  );
   context.res = {
     // status: 200, /* Defaults to 200 */
     body: finalSurveyData

@@ -1,6 +1,5 @@
-
 function stripChars(string, chars) {
-  return string.replace(RegExp('['+chars+']','g'), '');
+  return string.replace(RegExp("[" + chars + "]", "g"), "");
 }
 
 function buildTypesLists(surveyData) {
@@ -32,13 +31,13 @@ function buildTypesLists(surveyData) {
     return false;
   });
 
-  //'How do you spend 
+  //'How do you spend
   // Drugs and/or Drinking (sourcing & using)
   const rankedObjectOfObjectTypeKeys = objectOfObjectTypeKeys.filter(k => {
     let v = surveyData[k];
-    const keys = Object.keys(v); 
+    const keys = Object.keys(v);
     const inKeys = Object.keys(v[keys[0]]);
-    return (inKeys.length > 0)  &&  inKeys.includes("Rank");    
+    return inKeys.length > 0 && inKeys.includes("Rank");
   });
   // objectOfObjectTypeKeys = objectOfObjectTypeKeys.filter( k => {
   //   return !rankedObjectOfObjectTypeKeys.includes(k)
@@ -47,7 +46,7 @@ function buildTypesLists(surveyData) {
   return {
     listOfStringLists,
 
-   // objectOfObjectTypeKeys,
+    // objectOfObjectTypeKeys,
     rankedObjectOfObjectTypeKeys
     // 0: "PDC"
     // 1: "OtherAddictiveBehaviours"
@@ -60,50 +59,23 @@ function buildTypesLists(surveyData) {
   };
 }
 
-// function addCheckMark(surveyData, fullCheckLists, checkPrefix, uncheckedPrefix) {
-//   // "FullCheckLists": {
-//   //   "FinalChecklist": 
-//   //         ["Risk Assessments Completed (if indicated)", ...],
-//   //   "RiskAssessmentCheckist": [
-//   //         "Any indication of mental health risks?","Any indication of suicidal ideation?",..
-//   // }
-//   let moddedChecklists = {};  
-
-//   for (const [listName, fullList] of Object.entries(fullCheckLists)) {
-//     const checkedValues = surveyData[listName];
-
-//     moddedChecklists[listName] = fullList.map(v => {
-//       if(checkedValues.includes(v))
-//         return `${checkPrefix}${v}`;
-//       return `${uncheckedPrefix}${v}`;
-//     });  
-//   }
-
-//   return moddedChecklists;
-// }
-
-function addCheckMark(surveyData, fullCheckLists) {
+function addCheckMark(surveyData, checklistNames) {
   // "FullCheckLists": {
-  //   "FinalChecklist": 
+  //   "FinalChecklist":
   //         ["Risk Assessments Completed (if indicated)", ...],
   //   "RiskAssessmentCheckist": [
   //         "Any indication of mental health risks?","Any indication of suicidal ideation?",..
   // }
-  let moddedChecklists = {};  
+  let moddedChecklists = {};
 
-  for (const [listName, fullList] of Object.entries(fullCheckLists)) {
+  for (const listName of checklistNames) {
     const checkedValues = surveyData[listName];
-    
     moddedChecklists[listName] = {};
-    fullList.forEach(v => {
-      if(checkedValues.includes(v))
-        moddedChecklists[listName][v] = "y";
-      else
-        moddedChecklists[listName][v] = " ";
-      
-    });  
+    checkedValues.forEach(v => {
+      moddedChecklists[listName][v] = "y";
+    });
   }
-
   return moddedChecklists;
 }
+
 module.exports = { buildTypesLists, stripChars, addCheckMark };

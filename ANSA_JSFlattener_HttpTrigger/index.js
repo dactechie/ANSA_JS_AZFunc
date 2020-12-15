@@ -1,28 +1,23 @@
 const { buildTypesLists, addCheckMark } = require("./utils");
 const {
   spreadUpIntoArray,
-  joinStrings,
-  areaRank
+  joinStrings
 } = require("./flatteners");
 
 function transformStructure(surveyData, typesLists, spreadUpAliasMap, exclusions) {
 
-  const { listOfStringLists, rankedObjectOfObjectTypeKeys } = typesLists;
+  const { listOfStringLists } = typesLists;
   // listOfStringLists: HealthChecklist_STAFF, MHRecentRiskIssues, MHHistoricalRiskIssues
-  // rankedObjectOfObjectTypeKeys : 3: "HowDoYouSpendTime"
   // 4: "RiskAssessmentCheck"
-  const joinedLists = joinStrings(surveyData, listOfStringLists, exclusions);
-  let sData = {
-    ...surveyData,
-    ...surveyData["PDC"][0],
-    //   // 1: "OtherAddictiveBehaviours"   2: "Past4WkEngagedInOtheractivities"
-    ...spreadUpIntoArray(surveyData, spreadUpAliasMap),
-    ...joinedLists, // HealthChecklist_STAFF, MHRecentRiskIssues
-    ...areaRank(surveyData, rankedObjectOfObjectTypeKeys) //"HowDoYouSpendTime")
-  };
-
-  ["PDC", ...Object.keys(spreadUpAliasMap) ].forEach( e => delete sData[e]);
-
+  let sData = {...surveyData 
+              ,...spreadUpIntoArray(surveyData, spreadUpAliasMap)
+              ,...joinStrings(surveyData, listOfStringLists, exclusions) // HealthChecklist_STAFF, MHRecentRiskIssues};
+              };
+  if(sData["PDC"]) {
+    sData = { ...sData["PDC"][0],  ...sData  };
+    delete sData["PDC"];
+  }
+  [...Object.keys(spreadUpAliasMap) ].forEach( e => delete sData[e]);
   return sData;
 }
 

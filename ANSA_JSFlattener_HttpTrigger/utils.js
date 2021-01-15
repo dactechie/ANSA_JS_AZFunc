@@ -1,3 +1,22 @@
+// "QuantifiableMappings": {
+//   "Past4WkDailyLivingImpacted":"NotAtAll_Daily",
+//   "Past4WkDifficultyFindingHousing":"NotAtAll_Daily",
+const lookups = require("./lookups");
+
+function mapQuantifiables(data, quantifiableMappings) {
+  const results = {};
+  const mappingKeys = Object.keys(quantifiableMappings); //["Past4WkDailyLivingImpacted", "Past4WkDifficultyFindingHousing"]
+  Object.keys(data)
+  .filter(dataKey => mappingKeys.includes(dataKey))
+  .forEach(k => {
+    const mappingType = quantifiableMappings[ k ]; //NotAtAll_Extremely
+    // "NotAtAll_Extremely": {
+    //   "Not At all": 0,
+    // lookups[ "Daily_NotAtAll"  => {... } =>   [ "Not at all"] =>  4,
+    results[k] =   lookups[mappingType] [ data[k] ]; //data["Past4WkDailyLivingImpacted"] = > Less than wekkely
+  });
+  return results;
+}
 
 function stripChars(string, chars) {
   return string.replace(RegExp('['+chars+']','g'), '');
@@ -9,15 +28,15 @@ function buildTypesLists(surveyData) {
     return Array.isArray(v) && v.length > 0 && typeof v[0] === "string";
   });
 
-  // const objectArrayTypeKeys = Object.keys(surveyData).filter(k => {
-  //   let v = surveyData[k];
-  //   return (
-  //     Array.isArray(v) &&
-  //     typeof v[0] === "object" &&
-  //     v[0] !== null &&
-  //     Object.keys(v[0]).length > 0
-  //   );
-  // });
+  const objectArrayTypeKeys = Object.keys(surveyData).filter(k => {
+    let v = surveyData[k];
+    return (
+      Array.isArray(v) &&
+      typeof v[0] === "object" &&
+      v[0] !== null &&
+      Object.keys(v[0]).length > 0
+    );
+  });
   // data :  { "... ", "AddictiveBehaviours" : { "Gambling": {"YesNo" : False, "Days": 34 }} }
   //result :["Gambling", .. ]
   // const objectOfObjectTypeKeys = Object.keys(surveyData).filter(k => {
@@ -53,7 +72,7 @@ function buildTypesLists(surveyData) {
     // 3: "HowDoYouSpendTime"
     // 4: "RiskAssessmentCheck"
 
-    //  objectArrayTypeKeys,  //PDC
+    objectArrayTypeKeys,  //PDC, ODC
     // objectOfStringsTypeKeys // []
   };
 }
@@ -106,4 +125,4 @@ function addCheckMark(surveyData, fullCheckLists) {
 
   return moddedChecklists;
 }
-module.exports = { buildTypesLists, stripChars, addCheckMark };
+module.exports = { buildTypesLists, stripChars, addCheckMark, mapQuantifiables };

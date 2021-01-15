@@ -63,7 +63,21 @@ function e0e1(dict, e0Key) {
 // }
 
 // OtherAddictiveBehaviours e0e1(body,"OtherAddictiveBehaviours",  "OBehave")
-// Past4WkEngagedInOtheractivities
+// INPUT : 
+// "Past4WkEngagedInOtheractivities":
+            //  {
+            //    "Paid Work":{
+            //           "Frequency":"Three or four times per week",
+            //           "Days":"17"
+            //       },
+            //    "Hoarding":
+            //       {
+            //           "Days":"17"
+            //       }
+            // },
+             
+// OUTPUT: 
+ //   "EngagedPaidWorkFrequency": "Three or four times per week",
 function spreadUpIntoArray(body, aliasMapper) {
   let result = {};
   Object.keys(aliasMapper).forEach(k => {
@@ -82,24 +96,25 @@ function spreadUpIntoArray(body, aliasMapper) {
  * @returns Sorted string (by rank) of "areas"   : "<area1>(<rank1>), <area2>(<rank2>)"
  * @requires body[keyName] object to have "area" and "Rank" fields
  */
-function areaRank(body, keyName) {
-  let result = [];
-  if (body[keyName])
-    result = e0e1Old(body[keyName], "area");
+// function areaRank(body, keyName) {
+//   let result = [];
+//   if (body[keyName])
+//     result = e0e1Old(body[keyName], "area");
 
-  const sortedResult = result.sort((a, b) =>
-    a.Rank > b.Rank ? 1 : b.Rank > a.Rank ? -1 : 0
-  );
+//   const sortedResult = result.sort((a, b) =>
+//     a.Rank > b.Rank ? 1 : b.Rank > a.Rank ? -1 : 0
+//   );
 
-  return {
-    [keyName]: sortedResult
-      .map(e => `${e["area"]}(${e["Rank"]})`)
-      .join(",  ")
-  };
-}
+//   return {
+//     [keyName]: sortedResult
+//       .map(e => `${e["area"]}(${e["Rank"]})`)
+//       .join(",  ")
+//   };
+// }
 
 
-
+// listOfStringListNames: ["Past4WkAodRisks", "MHRecentRiskIssues", "MHHistoricalRiskIssues", "SupportTypeBestMatchesNeedsGoals", "ExternalReferrals", "RiskAssessmentChecklist", "FinalChecklist"]
+// exclusions: "RiskAssessmentChecklist", "FinalChecklist"
 function joinStrings(body, listOfStringListNames = [], exclusions = []) {
   let dict = {};
   if (exclusions)
@@ -114,4 +129,24 @@ function joinStrings(body, listOfStringListNames = [], exclusions = []) {
   return dict;
 }
 
-module.exports = { spreadUpIntoArray, joinStrings, areaRank };
+function joinObjects(body, listOfObjectNames = [], exclusions = []) {
+  let result = {};
+  if (exclusions)
+    listOfObjectNames = listOfObjectNames.filter(
+      e => !exclusions.includes(e)
+    );
+    
+  listOfObjectNames.forEach(objName => {
+      body[objName]
+      .filter(e => Object.keys(e).length > 0)
+      .forEach((e,i) => {
+        Object.keys(e).forEach(k => {
+            result[`ODC${i+1}_${k}`] = e[k];
+        })
+    });
+  });
+
+  return result;
+}
+
+module.exports = { spreadUpIntoArray, joinStrings, joinObjects };

@@ -1,5 +1,3 @@
-
-
 const { stripChars } = require("./utils");
 /**  Function : e0e1Old(dict, e0Key)
  *   Sample call : e0e1Old(body,"HowDoYouSpendTime",  "area")
@@ -148,5 +146,45 @@ function joinObjects(body, listOfObjectNames = [], exclusions = []) {
 
   return result;
 }
+/**
+ * 
+ * @param {*} body 
+ * @param {*} matrixKeys 
+ * @param {*} matrixMappings 
+ * @returns 
+ * 
+ *  "MatrixMappings": {
+    "AODRisksChecked": {
+      "keyField": "AODRiskDetail",
+      "valueFields": [
+        "Days"
+      ]
+    }
+ */
+function flattenMatrix(body, matrixKeys = [], matrixMappings = {}) {
+  let result = {};
+  matrixKeys.forEach(matrixKey => {
+    if (!body[matrixKey] || !Array.isArray(body[matrixKey])) return;
+    
+    const config = matrixMappings[matrixKey];
+    if (!config) return;
 
-module.exports = { spreadUpIntoArray, joinStrings, joinObjects };
+    body[matrixKey].forEach(row => {
+      if (row[config.keyField]) {
+        let safeKey =""
+        if(safeKey.length > 30){
+          safeKey = "other";
+        } else {
+          safeKey = stripChars(row[config.keyField], '/ -');
+        }
+        config.valueFields.forEach(valueField => {
+          const value = row[valueField] || "";
+          result[`${matrixKey}_${safeKey}_${valueField}`] = value;
+        });
+      }
+    });
+  });
+  return result;
+}
+
+module.exports = { spreadUpIntoArray, joinStrings, joinObjects, flattenMatrix };

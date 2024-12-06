@@ -32,11 +32,11 @@ function e0e1Old(dict, e0Key) {
 function meld(mainKey, subDict) {
   let result = {};
   Object.entries(subDict).forEach(k => {
-    
-    if (mainKey.search(",")>0)
+
+    if (mainKey.search(",") > 0)
       mainKey = mainKey.substr(0, mainKey.search(","));
 
-    let keyName = stripChars(`${mainKey}${k[0]}`,'/ -');
+    let keyName = stripChars(`${mainKey}${k[0]}`, '/ -');
 
     result[keyName] = k[1];
   });
@@ -49,9 +49,9 @@ function e0e1(dict, e0Key) {
   let result = {};
   Object.entries(dict)
     .forEach(e => {
-            // {EngagedPaidWorkFreq :1, EngagedPaidWorkDays: 3}
-      let temp = meld(`${e0Key}${e[0]}`, e[1] );
-      result = {...result, ...temp} ;
+      // {EngagedPaidWorkFreq :1, EngagedPaidWorkDays: 3}
+      let temp = meld(`${e0Key}${e[0]}`, e[1]);
+      result = { ...result, ...temp };
     });
   return result;
 }
@@ -63,28 +63,28 @@ function e0e1(dict, e0Key) {
 // OtherAddictiveBehaviours e0e1(body,"OtherAddictiveBehaviours",  "OBehave")
 // INPUT : 
 // "Past4WkEngagedInOtheractivities":
-            //  {
-            //    "Paid Work":{
-            //           "Frequency":"Three or four times per week",
-            //           "Days":"17"
-            //       },
-            //    "Hoarding":
-            //       {
-            //           "Days":"17"
-            //       }
-            // },
-             
+//  {
+//    "Paid Work":{
+//           "Frequency":"Three or four times per week",
+//           "Days":"17"
+//       },
+//    "Hoarding":
+//       {
+//           "Days":"17"
+//       }
+// },
+
 // OUTPUT: 
- //   "EngagedPaidWorkFrequency": "Three or four times per week",
+//   "EngagedPaidWorkFrequency": "Three or four times per week",
 function spreadUpIntoArray(body, aliasMapper) {
   let result = {};
   Object.keys(aliasMapper).forEach(k => {
-    if(body[k]) {
+    if (body[k]) {
       let temp = e0e1(body[k], aliasMapper[k]);
-      result = {...result, ...temp};
+      result = { ...result, ...temp };
     }
   });
-  return result;      
+  return result;
 }
 
 /**
@@ -133,15 +133,15 @@ function joinObjects(body, listOfObjectNames = [], exclusions = []) {
     listOfObjectNames = listOfObjectNames.filter(
       e => !exclusions.includes(e)
     );
-    
+
   listOfObjectNames.forEach(objName => {
-      body[objName]
+    body[objName]
       .filter(e => Object.keys(e).length > 0)
-      .forEach((e,i) => {
+      .forEach((e, i) => {
         Object.keys(e).forEach(k => {
-            result[`ODC${i+1}_${k}`] = e[k];
+          result[`ODC${i + 1}_${k}`] = e[k];
         })
-    });
+      });
   });
 
   return result;
@@ -153,30 +153,93 @@ function joinObjects(body, listOfObjectNames = [], exclusions = []) {
  * @param {*} matrixMappings 
  * @returns 
  * 
- *  "MatrixMappings": {
+{
+  "AODRisksChecked": [
+    {
+      "AODRiskDetail": "Long desciption of toher risk (more than 30 chars)",
+      "Days": "16"
+    },
+    {
+      "AODRiskDetail": "Sharing Injecting Equipment",
+      "Days": "27"
+    },
+    {
+      "AODRiskDetail": "Memory Loss",
+      "Days": "27"
+    }
+  ],
+  "AODRisksCheckedItems": [
+    "other",
+    "Sharing Injecting Equipment",
+    "Memory Loss"
+  ]
+}
+----------------------------------
+
+ * "matrixKeys" = [AODRiskDetail]
+ * 
+ *  "matrixMappings": {
     "AODRisksChecked": {
       "keyField": "AODRiskDetail",
       "valueFields": [
         "Days"
       ]
     }
+
+if not int full list, then other
+FullChecklists : { "AODRisksCheckedItems": [
+      "Using Alone",
+      "Polydrug Use",
+      "Sharing Injecting Equipment",
+      "Driving Intoxicated",
+      "Attended Intoxicated",
+      "Memory Loss",
+      "Black outs",
+      "Overdose",
+      "Ambulence Or Hospitalised",
+      "Unsafe Sex",
+      "Sexual Assault",
+      "Violence Assault",
+
  */
-function flattenMatrix(body, matrixKeys = [], matrixMappings = {}) {
+function flattenMatrix(body, matrixKeys = [], matrixMappings = {}, allowedList = []) {
   let result = {};
   matrixKeys.forEach(matrixKey => {
     if (!body[matrixKey] || !Array.isArray(body[matrixKey])) return;
-    
+
     const config = matrixMappings[matrixKey];
     if (!config) return;
 
+    //allowedList = ["AODRisksCheckedItems"]
+
+    // actual = input['AODRisksChecked'].map(it => it.AODRiskDetail)
+    const actual = body[matrixKey].map(it => it.AODRiskDetail)
+
     body[matrixKey].forEach(row => {
-      if (row[config.keyField]) {
-        let safeKey =""
-        if(safeKey.length > 30){
-          safeKey = "other";
-        } else {
-          safeKey = stripChars(row[config.keyField], '/ -');
-        }
+      // Check if item is in allowed list if provided
+      if (allowedList.length > 0 && !allowedList.includes(row[config.keyField])) {
+        console.log(" not in the allow list ", row[config.keyField]);
+        console.log("allowedList", allowedList);
+        return;
+      }
+
+
+      // body.find(key => key.allowedList + 'Items')
+
+      // bo.find(item => item === row[config.keyField]);
+
+      // if (!allowedList.includes(row[config.keyField])) {
+      //   console.log(" not in the allow list ", row[config.keyField])
+      //   console.log("allowedList", allowedList)
+      // }
+      if (row[config.keyField]) { //AODRisksChecked.AODRiskDetail ="..other risk desc"
+        let safeKey = ""
+
+        // if(safeKey.length > 30){
+        //   safeKey = "other";
+        // } else {
+        safeKey = stripChars(row[config.keyField], '/ -');
+        // }
         config.valueFields.forEach(valueField => {
           const value = row[valueField] || "";
           result[`${matrixKey}_${safeKey}_${valueField}`] = value;

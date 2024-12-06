@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "start": "func start",
-    "test": "jest"
+    "test": "jest",
+    "test:debug": "jest --runInBand"
   },
   "devDependencies": {
     "jest": "^29.7.0"
